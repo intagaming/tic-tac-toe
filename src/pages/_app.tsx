@@ -1,21 +1,20 @@
 // src/pages/_app.tsx
 import { withTRPC } from "@trpc/next";
-import type { AppRouter } from "../server/router";
-import type { AppType } from "next/dist/shared/lib/utils";
-import superjson from "superjson";
 import { SessionProvider } from "next-auth/react";
+import { AppProps } from "next/app";
+import superjson from "superjson";
+import type { AppRouter } from "../server/router";
 import "../styles/globals.css";
 
-const MyApp: AppType = ({
+const MyApp = ({
   Component,
   pageProps: { session, ...pageProps },
-}) => {
-  return (
-    <SessionProvider session={session}>
-      <Component {...pageProps} />
-    </SessionProvider>
-  );
-};
+}: AppProps) => (
+  <SessionProvider session={session}>
+    {/* eslint-disable-next-line react/jsx-props-no-spreading */}
+    <Component {...pageProps} />
+  </SessionProvider>
+);
 
 const getBaseUrl = () => {
   if (typeof window !== "undefined") {
@@ -28,7 +27,7 @@ const getBaseUrl = () => {
 };
 
 export default withTRPC<AppRouter>({
-  config({ ctx }) {
+  config() {
     /**
      * If you want to use SSR, you need to use the server's full URL
      * @link https://trpc.io/docs/ssr
