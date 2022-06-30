@@ -1,21 +1,21 @@
 import type { NextPage } from "next";
-import { signIn, signOut, useSession } from "next-auth/react";
+import { useSession } from "next-auth/react";
+import PleaseLogin from "../components/PleaseLogin";
+import Portal from "../components/Portal";
+import Sidebar from "../components/Sidebar";
+import TicTacToe from "../components/TicTacToe";
 
 const Home: NextPage = () => {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
 
   return (
-    <div>
-      <h1>Hi{session?.user && `, ${session.user.name}`}</h1>
-      {status === "unauthenticated" && (
-        <button type="button" onClick={() => signIn()}>
-          Sign In
-        </button>
-      )}
-      {status === "authenticated" && (
-        <button type="button" onClick={() => signOut()}>
-          Sign Out
-        </button>
+    <div className="flex w-screen h-screen bg-neutral-800 text-neutral-100">
+      <Sidebar />
+      <TicTacToe />
+      {status !== "authenticated" && (
+        <Portal>
+          <PleaseLogin />
+        </Portal>
       )}
     </div>
   );
