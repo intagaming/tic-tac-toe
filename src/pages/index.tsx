@@ -11,7 +11,9 @@ const Home: NextPage = () => {
   return (
     <div className="flex w-screen h-screen bg-neutral-800 text-neutral-100">
       <Sidebar />
-      <TicTacToe />
+      <div className="flex-1">
+        <TicTacToe />
+      </div>
       {status !== "authenticated" && (
         <Portal>
           <PleaseLogin />

@@ -1,3 +1,6 @@
+/* eslint-disable import/prefer-default-export */
+/* eslint-disable vars-on-top */
+/* eslint-disable no-var */
 // src/server/db/client.ts
 import { PrismaClient } from "@prisma/client";
 
