@@ -3,6 +3,7 @@ import { withTRPC } from "@trpc/next";
 import { SessionProvider } from "next-auth/react";
 import { AppProps } from "next/app";
 import superjson from "superjson";
+import { AblyContextProvider } from "../components/AblyContext";
 import type { AppRouter } from "../server/router";
 import "../styles/globals.css";
 
@@ -11,8 +12,10 @@ const MyApp = ({
   pageProps: { session, ...pageProps },
 }: AppProps) => (
   <SessionProvider session={session}>
-    {/* eslint-disable-next-line react/jsx-props-no-spreading */}
-    <Component {...pageProps} />
+    <AblyContextProvider>
+      {/* eslint-disable-next-line react/jsx-props-no-spreading */}
+      <Component {...pageProps} />
+    </AblyContextProvider>
   </SessionProvider>
 );
 
