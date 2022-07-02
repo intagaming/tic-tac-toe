@@ -1,10 +1,33 @@
 import { TRPCError } from "@trpc/server";
 import * as Ably from "ably/promises";
 import crypto from "node:crypto";
-import { prisma } from "../db/client";
 import { createRouter } from "./context";
 
 const MAX_RETRIES = 5;
+
+type Room = {
+  host: string | null;
+  state: "waiting" | "playing" | "finishing";
+  guest: string | null;
+  data: {
+    ticks: number;
+    board: ("host" | "guest")[];
+    turn: "host" | "guest";
+    turnEndsAt: number;
+  };
+};
+
+const DEFAULT_ROOM: Room = {
+  host: null,
+  state: "waiting",
+  guest: "userId",
+  data: {
+    ticks: 0,
+    board: [],
+    turn: "host",
+    turnEndsAt: -1,
+  },
+};
 
 export default createRouter().query("new-room", {
   async resolve({ ctx }) {
@@ -16,7 +39,7 @@ export default createRouter().query("new-room", {
       });
     }
 
-    const { session } = ctx;
+    const { session, redis } = ctx;
 
     if (!session?.user) {
       throw new TRPCError({
@@ -27,15 +50,20 @@ export default createRouter().query("new-room", {
     const clientId = `${session.user.name}_${session.user.email}`;
 
     // Create a new room
-    // TODO: move this to redis
     let retries = 0;
     let roomId;
     while (retries <= MAX_RETRIES) {
       roomId = crypto.randomBytes(3).toString("hex");
       try {
         // eslint-disable-next-line no-await-in-loop
-        await prisma.room.create({ data: { roomId } });
-        break;
+        const json = await redis.call(
+          "JSON.SET",
+          `room:${roomId}`,
+          "$",
+          JSON.stringify({ ...DEFAULT_ROOM, host: clientId }),
+          "NX"
+        );
+        if (json !== null) break;
       } catch (e) {
         retries += 1;
       }

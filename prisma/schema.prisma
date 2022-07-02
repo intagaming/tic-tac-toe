@@ -16,11 +16,6 @@ model Example {
   id String @id @default(cuid())
 }
 
-model Room {
-  roomId    String   @id
-  createdAt DateTime @default(now())
-}
-
 // Neccessary for Next auth
 model Account {
   id                String  @id @default(cuid())

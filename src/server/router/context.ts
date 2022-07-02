@@ -1,6 +1,7 @@
 // src/server/router/context.ts
 import * as trpc from "@trpc/server";
 import * as trpcNext from "@trpc/server/adapters/next";
+import Redis from "ioredis";
 import { unstable_getServerSession } from "next-auth";
 import { authOptions } from "../../pages/api/auth/[...nextauth]";
 import { prisma } from "../db/client";
@@ -10,12 +11,14 @@ export const createContext = async ({
   res,
 }: trpcNext.CreateNextContextOptions) => {
   const session = await unstable_getServerSession(req, res, authOptions);
+  const redis = new Redis(process.env.REDIS_URL ?? "redis://localhost:6379");
 
   return {
     req,
     res,
     prisma,
     session,
+    redis,
   };
 };
 
