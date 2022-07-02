@@ -1,5 +1,4 @@
 import { TRPCError } from "@trpc/server";
-import * as Ably from "ably/promises";
 import crypto from "node:crypto";
 import { z } from "zod";
 import { createRouter } from "./context";
@@ -33,15 +32,7 @@ const DEFAULT_ROOM: Room = {
 export default createRouter()
   .query("new-room", {
     async resolve({ ctx }) {
-      const apiKey = process.env.ABLY_API_KEY;
-      if (!apiKey) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Error 1",
-        });
-      }
-
-      const { session, redis } = ctx;
+      const { session, redis, ablyClient } = ctx;
 
       let clientId;
       if (!session?.user) {
@@ -79,8 +70,7 @@ export default createRouter()
       }
 
       // Generate the Ably API key to communicate within the room
-      const client = new Ably.Realtime(apiKey);
-      const tokenRequestData = await client.auth.createTokenRequest({
+      const tokenRequestData = await ablyClient.auth.createTokenRequest({
         clientId,
         capability: {
           [`control:${roomId}`]: ["publish", "presence"],
@@ -99,17 +89,9 @@ export default createRouter()
       roomId: z.string(),
     }),
     async resolve({ ctx, input }) {
-      const apiKey = process.env.ABLY_API_KEY;
-      if (!apiKey) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Error 1",
-        });
-      }
-
       const { roomId } = input;
 
-      const { session, redis } = ctx;
+      const { session, redis, ablyClient } = ctx;
 
       let clientId;
       if (!session?.user) {
@@ -126,8 +108,7 @@ export default createRouter()
         });
       }
 
-      const client = new Ably.Realtime(apiKey);
-      const tokenRequestData = await client.auth.createTokenRequest({
+      const tokenRequestData = await ablyClient.auth.createTokenRequest({
         clientId,
         capability: {
           [`control:${roomId}`]: ["publish", "presence"],
