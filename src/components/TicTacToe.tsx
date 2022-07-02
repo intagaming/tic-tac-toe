@@ -27,6 +27,11 @@ const TicTacToe = () => {
     }
   }, [newRoom.data, newRoom.isError, newRoom.isLoading, setTokenRequest]);
 
+  useEffect(() => {
+    if (!controlChannel) return;
+    controlChannel.presence.enter();
+  }, [controlChannel]);
+
   const joinRoom = trpc.useMutation(["tictactoe.join-room"]);
   const inputRef = useRef<HTMLInputElement | null>(null);
 

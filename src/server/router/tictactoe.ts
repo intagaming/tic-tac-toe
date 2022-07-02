@@ -83,7 +83,7 @@ export default createRouter()
       const tokenRequestData = await client.auth.createTokenRequest({
         clientId,
         capability: {
-          [`control:${roomId}`]: ["publish"],
+          [`control:${roomId}`]: ["publish", "presence"],
         },
       });
 
@@ -130,7 +130,7 @@ export default createRouter()
       const tokenRequestData = await client.auth.createTokenRequest({
         clientId,
         capability: {
-          [`control:${roomId}`]: ["publish"],
+          [`control:${roomId}`]: ["publish", "presence"],
         },
       });
 
