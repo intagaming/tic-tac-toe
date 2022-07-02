@@ -41,13 +41,12 @@ export default createRouter().query("new-room", {
 
     const { session, redis } = ctx;
 
+    let clientId;
     if (!session?.user) {
-      throw new TRPCError({
-        code: "UNAUTHORIZED",
-        message: "Unauthorized.",
-      });
+      clientId = crypto.randomUUID();
+    } else {
+      clientId = `${session.user.name}_${session.user.email}`;
     }
-    const clientId = `${session.user.name}_${session.user.email}`;
 
     // Create a new room
     let retries = 0;
@@ -85,6 +84,7 @@ export default createRouter().query("new-room", {
     });
 
     return {
+      clientId,
       roomId,
       tokenRequestData,
     };

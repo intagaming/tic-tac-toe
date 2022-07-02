@@ -30,6 +30,7 @@ const TicTacToe = () => {
       {loading && <p>Loading...</p>}
       {newRoom.data && (
         <div>
+          <p>Client ID: {newRoom.data.clientId}</p>
           <p>Room ID: {newRoom.data.roomId}</p>
           <button
             type="button"
