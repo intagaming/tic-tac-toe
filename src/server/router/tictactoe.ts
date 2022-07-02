@@ -40,7 +40,7 @@ export default createRouter().query("new-room", {
         retries += 1;
       }
     }
-    if (retries > MAX_RETRIES) {
+    if (retries > MAX_RETRIES || roomId === undefined) {
       throw new TRPCError({
         code: "INTERNAL_SERVER_ERROR",
         message: "Unable to create a room id. Try again later.",

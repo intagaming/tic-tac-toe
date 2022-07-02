@@ -12,7 +12,7 @@ const TicTacToe = () => {
   const { setTokenRequest } = useAbly();
   const [roomId, setRoomId] = useState<string | undefined>();
 
-  useChannel(`control:${roomId}`); // TODO: control via this channel
+  const controlChannel = useChannel(`control:${roomId}`);
 
   useEffect(() => {
     if (!newRoom.isLoading) {
@@ -28,7 +28,19 @@ const TicTacToe = () => {
   return (
     <div className="w-full h-full bg-green-700">
       {loading && <p>Loading...</p>}
-      {newRoom.data?.roomId && <p>Room ID: {newRoom.data.roomId}</p>}
+      {newRoom.data && (
+        <div>
+          <p>Room ID: {newRoom.data.roomId}</p>
+          <button
+            type="button"
+            onClick={() => {
+              controlChannel?.publish("action", "hello from client");
+            }}
+          >
+            Send a message
+          </button>
+        </div>
+      )}
     </div>
   );
 };
