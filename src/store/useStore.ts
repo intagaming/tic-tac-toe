@@ -3,6 +3,7 @@ import create from "zustand";
 import { Room } from "../server/router/tictactoe";
 
 type State = {
+  initialized: boolean;
   clientId: string | null;
   room: Room;
   joinRoom: (clientId: string, roomId: string) => void;
@@ -12,6 +13,7 @@ type State = {
 };
 
 export default create<State>((set) => ({
+  initialized: false,
   clientId: null,
   room: {
     id: null,
@@ -29,7 +31,19 @@ export default create<State>((set) => ({
     set((state) => ({
       ...state,
       clientId,
-      room: { ...state.room, id: roomId },
+      room: {
+        id: roomId,
+        host: null,
+        state: "waiting",
+        guest: null,
+        data: {
+          ticks: 0,
+          board: [],
+          turn: "host",
+          turnEndsAt: -1,
+        },
+      },
+      initialized: false,
     }));
   },
   onHostChanged: (newHost) => {
@@ -37,7 +51,7 @@ export default create<State>((set) => ({
     toast(`The host is now ${newHost}`);
   },
   onServerNotifyRoomState: (room: Room) => {
-    set((state) => ({ ...state, room }));
+    set((state) => ({ ...state, room, initialized: true }));
   },
   gameStartsNow: (room) => {
     set((state) => ({ ...state, room }));

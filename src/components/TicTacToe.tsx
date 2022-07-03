@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import toast from "react-hot-toast";
 import useChannel from "../hooks/useChannel";
 import useStore from "../store/useStore";
@@ -6,21 +6,20 @@ import { trpc } from "../utils/trpc";
 import { useAbly } from "./AblyContext";
 
 const TicTacToe = () => {
-  const [loading, setLoading] = useState(true);
-  const { mutate: newRoom } = trpc.useMutation(["tictactoe.new-room"]);
-  const myRoom = trpc.useQuery(["tictactoe.my-room"], {
-    staleTime: Infinity,
-  });
-
-  const { setTokenRequest } = useAbly();
   const {
     room,
+    initialized,
     clientId,
     joinRoom,
     onHostChanged,
     onServerNotifyRoomState,
     gameStartsNow,
   } = useStore();
+  const { setTokenRequest } = useAbly();
+  const { mutate: newRoom } = trpc.useMutation(["tictactoe.new-room"]);
+  const myRoom = trpc.useQuery(["tictactoe.my-room"], {
+    staleTime: Infinity,
+  });
 
   const controlChannel = useChannel(`control:${room.id}`);
   useChannel(`server:${room.id}`, (message) => {
@@ -46,7 +45,6 @@ const TicTacToe = () => {
 
     newRoom(null, {
       onSuccess: (data) => {
-        setLoading(false);
         joinRoom(data.clientId, data.roomId);
         setTokenRequest(data.tokenRequestData);
       },
@@ -63,21 +61,17 @@ const TicTacToe = () => {
     setTokenRequest,
   ]);
 
-  const { mutate: joinRoomMutate } = trpc.useMutation(["tictactoe.join-room"]);
+  const { mutate: joinRoomMutate } = trpc.useMutation(["tictactoe.join-room"], {
+    onSuccess: (data) => {
+      setTokenRequest(data.tokenRequestData);
+      joinRoom(data.clientId, data.roomId);
+    },
+  });
   // If we have a room, re-join it
   useEffect(() => {
     if (!myRoom.data?.roomId || room.id === myRoom.data.roomId) return;
 
-    joinRoomMutate(
-      { roomId: myRoom.data.roomId },
-      {
-        onSuccess: (data) => {
-          setLoading(false);
-          setTokenRequest(data.tokenRequestData);
-          joinRoom(data.clientId, data.roomId);
-        },
-      }
-    );
+    joinRoomMutate({ roomId: myRoom.data.roomId });
   }, [joinRoom, joinRoomMutate, myRoom.data, room.id, setTokenRequest]);
 
   useEffect(() => {
@@ -90,6 +84,9 @@ const TicTacToe = () => {
   }, [controlChannel]);
 
   const inputRef = useRef<HTMLInputElement | null>(null);
+
+  const loading = useMemo(() => !initialized, [initialized]);
+  console.log(loading, initialized);
 
   return (
     <div className="w-full h-full bg-green-700">
