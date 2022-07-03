@@ -13,18 +13,26 @@ const TicTacToe = () => {
   });
 
   const { setTokenRequest } = useAbly();
-  const { room, clientId, joinRoom, onHostChanged, onServerNotifyRoomState } =
-    useStore();
+  const {
+    room,
+    clientId,
+    joinRoom,
+    onHostChanged,
+    onServerNotifyRoomState,
+    gameStartsNow,
+  } = useStore();
 
   const controlChannel = useChannel(`control:${room.id}:${clientId}`);
   useChannel(`server:${room.id}:${clientId}`, (message) => {
     switch (message.name) {
-      case "HOST_CHANGE": {
+      case "HOST_CHANGE":
         onHostChanged(message.data);
         break;
-      }
       case "ROOM_STATE":
         onServerNotifyRoomState(JSON.parse(message.data));
+        break;
+      case "GAME_STARTS_NOW":
+        gameStartsNow(JSON.parse(message.data));
         break;
       default:
         // console.log(`Unknown message: ${message}`);
@@ -91,14 +99,6 @@ const TicTacToe = () => {
           <p>Client ID: {clientId}</p>
           <p>Room ID: {room.id}</p>
           <p>Host: {room.host}</p>
-          <button
-            type="button"
-            onClick={() => {
-              controlChannel?.publish("action", "hello from client");
-            }}
-          >
-            Send a message
-          </button>
           <div className="flex">
             <input type="text" ref={inputRef} className="text-black" />
             <button
@@ -119,6 +119,15 @@ const TicTacToe = () => {
               Join Room
             </button>
           </div>
+          <button
+            type="button"
+            onClick={() => {
+              // setLoading(true);
+              controlChannel?.publish("START_GAME", "");
+            }}
+          >
+            Start Game
+          </button>
         </div>
       )}
     </div>

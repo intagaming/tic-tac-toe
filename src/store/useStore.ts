@@ -8,6 +8,7 @@ type State = {
   joinRoom: (clientId: string, roomId: string) => void;
   onHostChanged: (newHost: string) => void;
   onServerNotifyRoomState: (room: Room) => void;
+  gameStartsNow: (room: Room) => void;
 };
 
 export default create<State>((set) => ({
@@ -37,5 +38,9 @@ export default create<State>((set) => ({
   },
   onServerNotifyRoomState: (room: Room) => {
     set((state) => ({ ...state, room }));
+  },
+  gameStartsNow: (room) => {
+    set((state) => ({ ...state, room }));
+    toast(`The game starts now`);
   },
 }));
