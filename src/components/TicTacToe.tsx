@@ -16,7 +16,15 @@ const TicTacToe = () => {
     gameStartsNow,
   } = useStore();
   const { setTokenRequest } = useAbly();
-  const { mutate: newRoom } = trpc.useMutation(["tictactoe.new-room"]);
+  const { mutate: newRoomMutation } = trpc.useMutation(["tictactoe.new-room"], {
+    onSuccess: (data) => {
+      joinRoom(data.clientId, data.roomId);
+      setTokenRequest(data.tokenRequestData);
+    },
+    onError: () => {
+      toast.error("Error occurred while trying to create a new room");
+    },
+  });
   const myRoom = trpc.useQuery(["tictactoe.my-room"], {
     staleTime: Infinity,
   });
@@ -42,24 +50,8 @@ const TicTacToe = () => {
   // New room if we don't have one
   useEffect(() => {
     if (myRoom.isLoading || myRoom.data?.roomId || room.id) return;
-
-    newRoom(null, {
-      onSuccess: (data) => {
-        joinRoom(data.clientId, data.roomId);
-        setTokenRequest(data.tokenRequestData);
-      },
-      onError: () => {
-        toast.error("Error occurred while trying to create a new room");
-      },
-    });
-  }, [
-    joinRoom,
-    myRoom.data?.roomId,
-    myRoom.isLoading,
-    newRoom,
-    room.id,
-    setTokenRequest,
-  ]);
+    newRoomMutation();
+  }, [myRoom.data?.roomId, myRoom.isLoading, newRoomMutation, room.id]);
 
   const { mutate: joinRoomMutate } = trpc.useMutation(["tictactoe.join-room"], {
     onSuccess: (data) => {
@@ -126,6 +118,14 @@ const TicTacToe = () => {
             }}
           >
             Start Game
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              newRoomMutation();
+            }}
+          >
+            New Room
           </button>
         </div>
       )}
