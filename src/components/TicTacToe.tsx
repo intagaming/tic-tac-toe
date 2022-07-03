@@ -15,7 +15,9 @@ const TicTacToe = () => {
     onServerNotifyRoomState,
     gameStartsNow,
   } = useStore();
+
   const { setTokenRequest } = useAbly();
+
   const { mutate: newRoomMutation } = trpc.useMutation(["tictactoe.new-room"], {
     onSuccess: (data) => {
       setTokenRequest(data.tokenRequestData);
@@ -27,6 +29,12 @@ const TicTacToe = () => {
   });
   const myRoom = trpc.useQuery(["tictactoe.my-room"], {
     staleTime: Infinity,
+  });
+  const { mutate: joinRoomMutate } = trpc.useMutation(["tictactoe.join-room"], {
+    onSuccess: (data) => {
+      setTokenRequest(data.tokenRequestData);
+      joinRoom(data.clientId, data.roomId);
+    },
   });
 
   const controlChannel = useChannel(`control:${room.id}`);
@@ -59,12 +67,6 @@ const TicTacToe = () => {
     room.id,
   ]);
 
-  const { mutate: joinRoomMutate } = trpc.useMutation(["tictactoe.join-room"], {
-    onSuccess: (data) => {
-      setTokenRequest(data.tokenRequestData);
-      joinRoom(data.clientId, data.roomId);
-    },
-  });
   // If we have a room, re-join it
   useEffect(() => {
     if (!myRoom.data?.roomId || room.id === myRoom.data.roomId || initialized)
@@ -90,7 +92,6 @@ const TicTacToe = () => {
   }, [controlChannel]);
 
   const inputRef = useRef<HTMLInputElement | null>(null);
-
   const loading = useMemo(() => !initialized, [initialized]);
 
   return (
