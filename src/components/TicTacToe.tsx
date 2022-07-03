@@ -7,9 +7,7 @@ import { useAbly } from "./AblyContext";
 
 const TicTacToe = () => {
   const [loading, setLoading] = useState(true);
-  const newRoom = trpc.useQuery(["tictactoe.new-room"], {
-    staleTime: Infinity,
-  });
+  const { mutate: newRoom } = trpc.useMutation(["tictactoe.new-room"]);
 
   const { setTokenRequest } = useAbly();
   const { room, clientId, joinRoom, hostChanged } = useStore();
@@ -29,21 +27,17 @@ const TicTacToe = () => {
   });
 
   useEffect(() => {
-    if (!newRoom.isLoading) {
-      if (!newRoom.isError && newRoom.data) {
+    newRoom(null, {
+      onSuccess: (data) => {
         setLoading(false);
-        setTokenRequest(newRoom.data.tokenRequestData);
-        joinRoom(newRoom.data.clientId, newRoom.data.roomId);
-      }
-      // TODO: handle error
-    }
-  }, [
-    joinRoom,
-    newRoom.data,
-    newRoom.isError,
-    newRoom.isLoading,
-    setTokenRequest,
-  ]);
+        setTokenRequest(data.tokenRequestData);
+        joinRoom(data.clientId, data.roomId);
+      },
+      onError: () => {
+        toast.error("Error occurred while trying to create a new room");
+      },
+    });
+  }, [joinRoom, newRoom, setTokenRequest]);
 
   useEffect(() => {
     if (!controlChannel) return;
@@ -56,7 +50,7 @@ const TicTacToe = () => {
   return (
     <div className="w-full h-full bg-green-700">
       {loading && <p>Loading...</p>}
-      {newRoom.data && (
+      {!loading && (
         <div>
           <p>Client ID: {clientId}</p>
           <p>Room ID: {room.id}</p>

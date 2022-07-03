@@ -38,7 +38,7 @@ const makeCapability = (
 });
 
 export default createRouter()
-  .query("new-room", {
+  .mutation("new-room", {
     async resolve({ ctx }) {
       const { session, redis, ablyClient } = ctx;
 
