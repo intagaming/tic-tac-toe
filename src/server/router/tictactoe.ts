@@ -20,7 +20,7 @@ type Room = {
 const DEFAULT_ROOM: Room = {
   host: null,
   state: "waiting",
-  guest: "userId",
+  guest: null,
   data: {
     ticks: 0,
     board: [],
