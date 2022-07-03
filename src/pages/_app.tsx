@@ -2,6 +2,7 @@
 import { withTRPC } from "@trpc/next";
 import { SessionProvider } from "next-auth/react";
 import { AppProps } from "next/app";
+import { Toaster } from "react-hot-toast";
 import superjson from "superjson";
 import { AblyContextProvider } from "../components/AblyContext";
 import type { AppRouter } from "../server/router";
@@ -15,6 +16,7 @@ const MyApp = ({
     <AblyContextProvider>
       {/* eslint-disable-next-line react/jsx-props-no-spreading */}
       <Component {...pageProps} />
+      <Toaster />
     </AblyContextProvider>
   </SessionProvider>
 );

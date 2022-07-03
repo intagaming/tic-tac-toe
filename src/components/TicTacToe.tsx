@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import toast from "react-hot-toast";
 import useChannel from "../hooks/useChannel";
 import { trpc } from "../utils/trpc";
 import { useAbly } from "./AblyContext";
@@ -12,8 +13,21 @@ const TicTacToe = () => {
   const { setTokenRequest } = useAbly();
   const [roomId, setRoomId] = useState<string | undefined>();
   const [clientId, setClientId] = useState<string | undefined>();
+  const [host, setHost] = useState<string | undefined>();
 
   const controlChannel = useChannel(`control:${roomId}`);
+  useChannel(`server:${roomId}`, (message) => {
+    switch (message.name) {
+      case "HOST_CHANGE": {
+        setHost(message.data);
+        toast(`The host is now ${message.data}`);
+        break;
+      }
+      default:
+        console.error(`Unknown message: ${message}`);
+        break;
+    }
+  });
 
   useEffect(() => {
     if (!newRoom.isLoading) {
@@ -42,6 +56,7 @@ const TicTacToe = () => {
         <div>
           <p>Client ID: {clientId}</p>
           <p>Room ID: {roomId}</p>
+          <p>Host: {host}</p>
           <button
             type="button"
             onClick={() => {
