@@ -22,8 +22,8 @@ const TicTacToe = () => {
     gameStartsNow,
   } = useStore();
 
-  const controlChannel = useChannel(`control:${room.id}:${clientId}`);
-  useChannel(`server:${room.id}:${clientId}`, (message) => {
+  const controlChannel = useChannel(`control:${room.id}`);
+  useChannel(`server:${room.id}`, (message) => {
     switch (message.name) {
       case "HOST_CHANGE":
         onHostChanged(message.data);
@@ -99,6 +99,8 @@ const TicTacToe = () => {
           <p>Client ID: {clientId}</p>
           <p>Room ID: {room.id}</p>
           <p>Host: {room.host}</p>
+          <p>Guest: {room.guest}</p>
+          <p>State: {room.state}</p>
           <div className="flex">
             <input type="text" ref={inputRef} className="text-black" />
             <button

@@ -33,11 +33,10 @@ const DEFAULT_ROOM: Room = {
 };
 
 const makeCapability = (
-  roomId: string,
-  clientId: string
+  roomId: string
 ): { [key: string]: Types.CapabilityOp[] } => ({
-  [`control:${roomId}:${clientId}`]: ["presence", "publish"],
-  [`server:${roomId}:${clientId}`]: ["subscribe"],
+  [`control:${roomId}`]: ["presence", "publish"],
+  [`server:${roomId}`]: ["subscribe"],
 });
 
 export default createRouter()
@@ -97,7 +96,7 @@ export default createRouter()
       // Generate the Ably API key to communicate within the room
       const tokenRequestData = await ablyClient.auth.createTokenRequest({
         clientId,
-        capability: makeCapability(roomId, clientId),
+        capability: makeCapability(roomId),
       });
 
       return {
@@ -133,7 +132,7 @@ export default createRouter()
 
       const tokenRequestData = await ablyClient.auth.createTokenRequest({
         clientId,
-        capability: makeCapability(roomId, clientId),
+        capability: makeCapability(roomId),
       });
 
       return {
