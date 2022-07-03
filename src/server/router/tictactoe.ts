@@ -144,7 +144,7 @@ export default createRouter()
         const clientIdToLeave = input.clientId ?? clientId;
         const oldRoomId = await redis.get(`client:${clientIdToLeave}`);
         // If the client is already in a room, leave the room
-        if (oldRoomId !== null) {
+        if (oldRoomId !== null && oldRoomId !== roomId) {
           // Let workers handle the leave
           await ablyClient.channels
             .get(`control:${oldRoomId}`)
