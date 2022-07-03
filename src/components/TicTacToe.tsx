@@ -100,7 +100,7 @@ const TicTacToe = () => {
             Send a message
           </button>
           <div className="flex">
-            <input type="text" ref={inputRef} />
+            <input type="text" ref={inputRef} className="text-black" />
             <button
               type="button"
               onClick={() => {
