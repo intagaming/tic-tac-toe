@@ -55,7 +55,10 @@ export default createRouter()
     },
   })
   .mutation("new-room", {
-    async resolve({ ctx }) {
+    input: z.object({
+      clientId: z.string().nullable(),
+    }),
+    async resolve({ ctx, input }) {
       const { session, redis, ablyClient } = ctx;
 
       let clientId;
@@ -65,28 +68,40 @@ export default createRouter()
         clientId = `${session.user.name}_${session.user.email}`;
       }
 
+      if (session?.user || input.clientId) {
+        const clientIdToLeave = input.clientId ?? clientId;
+        const oldRoomId = await redis.get(`client:${clientIdToLeave}`);
+        // If the client is already in a room, leave the room
+        if (oldRoomId !== null) {
+          // Let workers handle the leave
+          await ablyClient.channels
+            .get(`control:${oldRoomId}`)
+            .publish("LEAVE_ROOM", clientIdToLeave);
+        }
+      }
+
       // Create a new room
       let retries = 0;
-      let roomId;
+      let newRoomId;
       while (retries <= MAX_RETRIES) {
-        roomId = crypto.randomBytes(3).toString("hex");
+        newRoomId = crypto.randomBytes(3).toString("hex");
         // eslint-disable-next-line no-await-in-loop
         const json = await redis.call(
           "JSON.SET",
-          `room:${roomId}`,
+          `room:${newRoomId}`,
           "$",
-          JSON.stringify({ ...DEFAULT_ROOM, id: roomId }),
+          JSON.stringify({ ...DEFAULT_ROOM, id: newRoomId }),
           "NX"
         );
         if (json !== null) {
           // eslint-disable-next-line no-await-in-loop
-          redis.expire(`room:${roomId}`, 60); // The host has 60 seconds to join the room
+          redis.expire(`room:${newRoomId}`, 60); // The host has 60 seconds to join the room
           break;
         }
 
         retries += 1;
       }
-      if (retries > MAX_RETRIES || roomId === undefined) {
+      if (retries > MAX_RETRIES || newRoomId === undefined) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Unable to create a room id. Try again later.",
@@ -96,18 +111,21 @@ export default createRouter()
       // Generate the Ably API key to communicate within the room
       const tokenRequestData = await ablyClient.auth.createTokenRequest({
         clientId,
-        capability: makeCapability(roomId),
+        capability: makeCapability(newRoomId),
       });
+
+      await redis.set(`client:${clientId}`, newRoomId);
 
       return {
         clientId,
-        roomId,
+        roomId: newRoomId,
         tokenRequestData,
       };
     },
   })
   .mutation("join-room", {
     input: z.object({
+      clientId: z.string().nullable(),
       roomId: z.string(),
     }),
     async resolve({ ctx, input }) {
@@ -122,6 +140,18 @@ export default createRouter()
         clientId = `${session.user.name}_${session.user.email}`;
       }
 
+      if (session?.user || input.clientId) {
+        const clientIdToLeave = input.clientId ?? clientId;
+        const oldRoomId = await redis.get(`client:${clientIdToLeave}`);
+        // If the client is already in a room, leave the room
+        if (oldRoomId !== null) {
+          // Let workers handle the leave
+          await ablyClient.channels
+            .get(`control:${oldRoomId}`)
+            .publish("LEAVE_ROOM", clientIdToLeave);
+        }
+      }
+
       const json = await redis.call("JSON.GET", `room:${roomId}`, "$");
       if (json === null) {
         throw new TRPCError({
@@ -134,6 +164,8 @@ export default createRouter()
         clientId,
         capability: makeCapability(roomId),
       });
+
+      await redis.set(`client:${clientId}`, roomId);
 
       return {
         clientId,

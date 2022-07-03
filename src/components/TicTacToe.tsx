@@ -18,8 +18,8 @@ const TicTacToe = () => {
   const { setTokenRequest } = useAbly();
   const { mutate: newRoomMutation } = trpc.useMutation(["tictactoe.new-room"], {
     onSuccess: (data) => {
-      joinRoom(data.clientId, data.roomId);
       setTokenRequest(data.tokenRequestData);
+      joinRoom(data.clientId, data.roomId);
     },
     onError: () => {
       toast.error("Error occurred while trying to create a new room");
@@ -50,8 +50,14 @@ const TicTacToe = () => {
   // New room if we don't have one
   useEffect(() => {
     if (myRoom.isLoading || myRoom.data?.roomId || room.id) return;
-    newRoomMutation();
-  }, [myRoom.data?.roomId, myRoom.isLoading, newRoomMutation, room.id]);
+    newRoomMutation({ clientId });
+  }, [
+    clientId,
+    myRoom.data?.roomId,
+    myRoom.isLoading,
+    newRoomMutation,
+    room.id,
+  ]);
 
   const { mutate: joinRoomMutate } = trpc.useMutation(["tictactoe.join-room"], {
     onSuccess: (data) => {
@@ -61,10 +67,18 @@ const TicTacToe = () => {
   });
   // If we have a room, re-join it
   useEffect(() => {
-    if (!myRoom.data?.roomId || room.id === myRoom.data.roomId) return;
+    if (!myRoom.data?.roomId || room.id === myRoom.data.roomId || initialized)
+      return;
 
-    joinRoomMutate({ roomId: myRoom.data.roomId });
-  }, [joinRoom, joinRoomMutate, myRoom.data, room.id, setTokenRequest]);
+    joinRoomMutate({ roomId: myRoom.data.roomId, clientId });
+  }, [
+    clientId,
+    initialized,
+    joinRoomMutate,
+    myRoom.data,
+    room.id,
+    setTokenRequest,
+  ]);
 
   useEffect(() => {
     if (!controlChannel) return () => {};
@@ -78,7 +92,6 @@ const TicTacToe = () => {
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   const loading = useMemo(() => !initialized, [initialized]);
-  console.log(loading, initialized);
 
   return (
     <div className="w-full h-full bg-green-700">
@@ -96,15 +109,7 @@ const TicTacToe = () => {
               type="button"
               onClick={() => {
                 if (!inputRef.current) return;
-                joinRoomMutate(
-                  { roomId: inputRef.current.value },
-                  {
-                    onSuccess: (data) => {
-                      setTokenRequest(data.tokenRequestData);
-                      joinRoom(data.clientId, data.roomId);
-                    },
-                  }
-                );
+                joinRoomMutate({ roomId: inputRef.current.value, clientId });
               }}
             >
               Join Room
@@ -122,7 +127,7 @@ const TicTacToe = () => {
           <button
             type="button"
             onClick={() => {
-              newRoomMutation();
+              newRoomMutation({ clientId });
             }}
           >
             New Room

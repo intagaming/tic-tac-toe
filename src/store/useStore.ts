@@ -43,7 +43,6 @@ export default create<State>((set) => ({
           turnEndsAt: -1,
         },
       },
-      initialized: false,
     }));
   },
   onHostChanged: (newHost) => {
