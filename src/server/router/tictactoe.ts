@@ -1,4 +1,5 @@
 import { TRPCError } from "@trpc/server";
+import { Types } from "ably/promises";
 import crypto from "node:crypto";
 import { z } from "zod";
 import { createRouter } from "./context";
@@ -28,6 +29,13 @@ const DEFAULT_ROOM: Room = {
     turnEndsAt: -1,
   },
 };
+
+const makeCapability = (
+  roomId: string
+): { [key: string]: Types.CapabilityOp[] } => ({
+  [`control:${roomId}`]: ["publish", "presence"],
+  [`server:${roomId}`]: ["subscribe"],
+});
 
 export default createRouter()
   .query("new-room", {
@@ -72,9 +80,7 @@ export default createRouter()
       // Generate the Ably API key to communicate within the room
       const tokenRequestData = await ablyClient.auth.createTokenRequest({
         clientId,
-        capability: {
-          [`control:${roomId}`]: ["publish", "presence"],
-        },
+        capability: makeCapability(roomId),
       });
 
       return {
@@ -110,9 +116,7 @@ export default createRouter()
 
       const tokenRequestData = await ablyClient.auth.createTokenRequest({
         clientId,
-        capability: {
-          [`control:${roomId}`]: ["publish", "presence"],
-        },
+        capability: makeCapability(roomId),
       });
 
       return {
