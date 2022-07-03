@@ -13,7 +13,8 @@ const TicTacToe = () => {
   });
 
   const { setTokenRequest } = useAbly();
-  const { room, clientId, joinRoom, onHostChanged } = useStore();
+  const { room, clientId, joinRoom, onHostChanged, onServerNotifyRoomState } =
+    useStore();
 
   const controlChannel = useChannel(`control:${room.id}:${clientId}`);
   useChannel(`server:${room.id}:${clientId}`, (message) => {
@@ -22,6 +23,9 @@ const TicTacToe = () => {
         onHostChanged(message.data);
         break;
       }
+      case "ROOM_STATE":
+        onServerNotifyRoomState(JSON.parse(message.data));
+        break;
       default:
         // console.log(`Unknown message: ${message}`);
         break;

@@ -6,7 +6,8 @@ import { createRouter } from "./context";
 
 const MAX_RETRIES = 5;
 
-type Room = {
+export type Room = {
+  id: string | null;
   host: string | null;
   state: "waiting" | "playing" | "finishing";
   guest: string | null;
@@ -19,6 +20,7 @@ type Room = {
 };
 
 const DEFAULT_ROOM: Room = {
+  id: null,
   host: null,
   state: "waiting",
   guest: null,
@@ -74,7 +76,7 @@ export default createRouter()
           "JSON.SET",
           `room:${roomId}`,
           "$",
-          JSON.stringify({ ...DEFAULT_ROOM }),
+          JSON.stringify({ ...DEFAULT_ROOM, id: roomId }),
           "NX"
         );
         if (json !== null) {
