@@ -31,13 +31,28 @@ const DEFAULT_ROOM: Room = {
 };
 
 const makeCapability = (
-  roomId: string
+  roomId: string,
+  clientId: string
 ): { [key: string]: Types.CapabilityOp[] } => ({
-  [`control:${roomId}`]: ["publish", "presence"],
-  [`server:${roomId}`]: ["subscribe"],
+  [`control:${roomId}:${clientId}`]: ["presence", "publish"],
+  [`server:${roomId}:${clientId}`]: ["subscribe"],
 });
 
 export default createRouter()
+  .query("my-room", {
+    async resolve({ ctx }) {
+      const { session, redis } = ctx;
+
+      if (!session?.user) {
+        return { roomId: null };
+      }
+      const clientId = `${session.user.name}_${session.user.email}`;
+      const roomId = await redis.get(`client:${clientId}`);
+      return {
+        roomId,
+      };
+    },
+  })
   .mutation("new-room", {
     async resolve({ ctx }) {
       const { session, redis, ablyClient } = ctx;
@@ -80,7 +95,7 @@ export default createRouter()
       // Generate the Ably API key to communicate within the room
       const tokenRequestData = await ablyClient.auth.createTokenRequest({
         clientId,
-        capability: makeCapability(roomId),
+        capability: makeCapability(roomId, clientId),
       });
 
       return {
@@ -110,13 +125,13 @@ export default createRouter()
       if (json === null) {
         throw new TRPCError({
           code: "NOT_FOUND",
-          message: "Room not found",
+          message: `Room ${roomId} does not exist.`,
         });
       }
 
       const tokenRequestData = await ablyClient.auth.createTokenRequest({
         clientId,
-        capability: makeCapability(roomId),
+        capability: makeCapability(roomId, clientId),
       });
 
       return {

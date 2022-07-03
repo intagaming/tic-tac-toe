@@ -1,3 +1,4 @@
+import toast from "react-hot-toast";
 import create from "zustand";
 
 type Room = {
@@ -9,7 +10,7 @@ type State = {
   clientId: string | null;
   room: Room;
   joinRoom: (clientId: string, roomId: string) => void;
-  hostChanged: (newHost: string) => void;
+  onHostChanged: (newHost: string) => void;
 };
 
 export default create<State>((set) => ({
@@ -25,7 +26,8 @@ export default create<State>((set) => ({
       room: { ...state.room, id: roomId },
     }));
   },
-  hostChanged: (newHost) => {
+  onHostChanged: (newHost) => {
     set((state) => ({ ...state, room: { ...state.room, host: newHost } }));
+    toast(`The host is now ${newHost}`);
   },
 }));

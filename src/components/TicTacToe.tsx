@@ -8,16 +8,18 @@ import { useAbly } from "./AblyContext";
 const TicTacToe = () => {
   const [loading, setLoading] = useState(true);
   const { mutate: newRoom } = trpc.useMutation(["tictactoe.new-room"]);
+  const myRoom = trpc.useQuery(["tictactoe.my-room"], {
+    staleTime: Infinity,
+  });
 
   const { setTokenRequest } = useAbly();
-  const { room, clientId, joinRoom, hostChanged } = useStore();
+  const { room, clientId, joinRoom, onHostChanged } = useStore();
 
-  const controlChannel = useChannel(`control:${room.id}`);
-  useChannel(`server:${room.id}`, (message) => {
+  const controlChannel = useChannel(`control:${room.id}:${clientId}`);
+  useChannel(`server:${room.id}:${clientId}`, (message) => {
     switch (message.name) {
       case "HOST_CHANGE": {
-        hostChanged(message.data);
-        toast(`The host is now ${message.data}`);
+        onHostChanged(message.data);
         break;
       }
       default:
@@ -26,25 +28,55 @@ const TicTacToe = () => {
     }
   });
 
+  // New room if we don't have one
   useEffect(() => {
+    if (myRoom.isLoading || myRoom.data?.roomId || room.id) return;
+
     newRoom(null, {
       onSuccess: (data) => {
         setLoading(false);
-        setTokenRequest(data.tokenRequestData);
         joinRoom(data.clientId, data.roomId);
+        setTokenRequest(data.tokenRequestData);
       },
       onError: () => {
         toast.error("Error occurred while trying to create a new room");
       },
     });
-  }, [joinRoom, newRoom, setTokenRequest]);
+  }, [
+    joinRoom,
+    myRoom.data?.roomId,
+    myRoom.isLoading,
+    newRoom,
+    room.id,
+    setTokenRequest,
+  ]);
+
+  const { mutate: joinRoomMutate } = trpc.useMutation(["tictactoe.join-room"]);
+  // If we have a room, re-join it
+  useEffect(() => {
+    if (!myRoom.data?.roomId || room.id === myRoom.data.roomId) return;
+
+    joinRoomMutate(
+      { roomId: myRoom.data.roomId },
+      {
+        onSuccess: (data) => {
+          setLoading(false);
+          setTokenRequest(data.tokenRequestData);
+          joinRoom(data.clientId, data.roomId);
+        },
+      }
+    );
+  }, [joinRoom, joinRoomMutate, myRoom.data, room.id, setTokenRequest]);
 
   useEffect(() => {
-    if (!controlChannel) return;
+    if (!controlChannel) return () => {};
+
     controlChannel.presence.enter();
+    return () => {
+      controlChannel.presence.leave();
+    };
   }, [controlChannel]);
 
-  const joinRoomMutation = trpc.useMutation(["tictactoe.join-room"]);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   return (
@@ -69,7 +101,7 @@ const TicTacToe = () => {
               type="button"
               onClick={() => {
                 if (!inputRef.current) return;
-                joinRoomMutation.mutate(
+                joinRoomMutate(
                   { roomId: inputRef.current.value },
                   {
                     onSuccess: (data) => {
