@@ -1,20 +1,17 @@
 import { Types } from "ably";
+import Ably from "ably/promises";
 import {
   createContext,
-  Dispatch,
   ReactNode,
-  SetStateAction,
   useContext,
   useEffect,
   useMemo,
   useState,
 } from "react";
-import Ably from "ably/promises";
 import useStore from "../store/useStore";
 
 type State = {
   ably: Types.RealtimePromise | undefined;
-  setTokenRequest: Dispatch<SetStateAction<Types.TokenRequest | undefined>>;
   controlChannel: Types.RealtimeChannelPromise | null;
 };
 
@@ -22,11 +19,11 @@ const ablyContext = createContext<State | undefined>(undefined);
 
 function useChannel(
   ably: State["ably"],
-  channelName: string,
+  channelName: string | null,
   callbackOnMessage?: (message: Types.Message) => void
 ) {
   const channel = useMemo(
-    () => ably?.channels.get(channelName),
+    () => (channelName ? ably?.channels.get(channelName) : undefined),
     [ably, channelName]
   );
 
@@ -47,12 +44,13 @@ function useChannel(
 
 export const AblyContextProvider = ({ children }: { children: ReactNode }) => {
   const [ably, setAbly] = useState<State["ably"]>();
-  const [tokenRequest, setTokenRequest] = useState<
-    Types.TokenRequest | undefined
-  >();
+  const tokenRequest = useStore((store) => store.tokenRequest);
 
   useEffect(() => {
-    if (!tokenRequest) return;
+    if (!tokenRequest) {
+      setAbly(undefined);
+      return;
+    }
     setAbly(
       new Ably.Realtime.Promise({
         authCallback: (_, callback) => callback("", tokenRequest),
@@ -67,8 +65,11 @@ export const AblyContextProvider = ({ children }: { children: ReactNode }) => {
     gameStartsNow,
     playerCheckedBox,
   } = useStore();
-  const controlChannel = useChannel(ably, `control:${room.id}`);
-  useChannel(ably, `server:${room.id}`, (message) => {
+  const controlChannel = useChannel(
+    ably,
+    room.id ? `control:${room.id}` : null
+  );
+  useChannel(ably, room.id ? `server:${room.id}` : null, (message) => {
     switch (message.name) {
       case "HOST_CHANGE":
         onHostChanged(message.data);
@@ -98,7 +99,7 @@ export const AblyContextProvider = ({ children }: { children: ReactNode }) => {
   }, [controlChannel]);
 
   const value = useMemo(
-    () => ({ ably, setTokenRequest, controlChannel }),
+    () => ({ ably, controlChannel }),
     [ably, controlChannel]
   );
 

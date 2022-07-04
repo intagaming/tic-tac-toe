@@ -7,26 +7,38 @@ import Board from "./Board";
 import ProfilePane from "./ProfilePane";
 
 const TicTacToe = () => {
-  const { room, initialized, clientId, joinRoom } = useStore();
+  const { room, initialized, clientId, joinRoom, reset } = useStore();
 
-  const { setTokenRequest, controlChannel } = useAbly();
+  const { controlChannel } = useAbly();
 
-  const { mutate: newRoomMutation } = trpc.useMutation(["tictactoe.new-room"], {
-    onSuccess: (data) => {
-      setTokenRequest(data.tokenRequestData);
-      joinRoom(data.clientId, data.roomId);
-    },
-    onError: () => {
-      toast.error("Error occurred while trying to create a new room");
-    },
-  });
+  const { mutate: newRoomMutation, isLoading: newRoomLoading } =
+    trpc.useMutation(["tictactoe.new-room"], {
+      onMutate: () => {
+        reset();
+      },
+      onSuccess: (data) => {
+        joinRoom(data.tokenRequestData, data.clientId, data.roomId);
+      },
+      onError: () => {
+        toast.error("Error occurred while trying to create a new room");
+      },
+    });
+  const { mutate: joinRoomMutate, isLoading: joinRoomLoading } =
+    trpc.useMutation(["tictactoe.join-room"], {
+      onMutate: () => {
+        reset();
+      },
+      onSuccess: (data) => {
+        joinRoom(data.tokenRequestData, data.clientId, data.roomId);
+      },
+    });
+
   const myRoom = trpc.useQuery(["tictactoe.my-room"], {
     staleTime: Infinity,
-  });
-  const { mutate: joinRoomMutate } = trpc.useMutation(["tictactoe.join-room"], {
     onSuccess: (data) => {
-      setTokenRequest(data.tokenRequestData);
-      joinRoom(data.clientId, data.roomId);
+      // If we have a room, re-join it
+      if (!data?.roomId) return;
+      joinRoomMutate({ roomId: data.roomId, clientId });
     },
   });
 
@@ -42,23 +54,11 @@ const TicTacToe = () => {
     room.id,
   ]);
 
-  // If we have a room, re-join it
-  useEffect(() => {
-    if (!myRoom.data?.roomId || room.id === myRoom.data.roomId || initialized)
-      return;
-
-    joinRoomMutate({ roomId: myRoom.data.roomId, clientId });
-  }, [
-    clientId,
-    initialized,
-    joinRoomMutate,
-    myRoom.data,
-    room.id,
-    setTokenRequest,
-  ]);
-
   const inputRef = useRef<HTMLInputElement | null>(null);
-  const loading = useMemo(() => !initialized, [initialized]);
+  const loading = useMemo(
+    () => newRoomLoading || joinRoomLoading || !initialized,
+    [initialized, joinRoomLoading, newRoomLoading]
+  );
 
   return (
     <div className="flex flex-col w-full h-full bg-green-700">

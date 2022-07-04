@@ -1,15 +1,37 @@
 /* eslint-disable no-param-reassign */
+import { Types } from "ably/promises";
+import _ from "lodash-es";
 import toast from "react-hot-toast";
 import create from "zustand";
 import { immer } from "zustand/middleware/immer";
 import { Room } from "../server/router/tictactoe";
 import { CheckedBoxAnnouncement } from "../types";
 
+const roomDefault: Room = {
+  id: null,
+  host: null,
+  state: "waiting",
+  guest: null,
+  data: {
+    ticks: 0,
+    board: [null, null, null, null, null, null, null, null, null],
+    turn: "host",
+    turnEndsAt: -1,
+  },
+};
+
 type State = {
   initialized: boolean;
+  tokenRequest: Types.TokenRequest | null;
   clientId: string | null;
   room: Room;
-  joinRoom: (clientId: string, roomId: string) => void;
+
+  reset: () => void;
+  joinRoom: (
+    tokenRequest: Types.TokenRequest,
+    clientId: string,
+    roomId: string
+  ) => void;
   onHostChanged: (newHost: string) => void;
   onServerNotifyRoomState: (room: Room) => void;
   gameStartsNow: (room: Room) => void;
@@ -19,36 +41,24 @@ type State = {
 export default create<State>()(
   immer<State>((set) => ({
     initialized: false,
+    tokenRequest: null,
     clientId: null,
-    room: {
-      id: null,
-      host: null,
-      state: "waiting",
-      guest: null,
-      data: {
-        ticks: 0,
-        board: [null, null, null, null, null, null, null, null, null],
-        turn: "host",
-        turnEndsAt: -1,
-      },
+    room: _.cloneDeep(roomDefault),
+
+    reset: () => {
+      set((state) => {
+        state.initialized = false;
+        state.tokenRequest = null;
+        state.clientId = null;
+        state.room = _.cloneDeep(roomDefault);
+      });
     },
-    joinRoom: (clientId, roomId) => {
-      set((state) => ({
-        ...state,
-        clientId,
-        room: {
-          id: roomId,
-          host: null,
-          state: "waiting",
-          guest: null,
-          data: {
-            ticks: 0,
-            board: [],
-            turn: "host",
-            turnEndsAt: -1,
-          },
-        },
-      }));
+    joinRoom: (tokenRequest, clientId, roomId) => {
+      set((state) => {
+        state.tokenRequest = tokenRequest;
+        state.clientId = clientId;
+        state.room.id = roomId;
+      });
     },
     onHostChanged: (newHost) => {
       set((state) => {
