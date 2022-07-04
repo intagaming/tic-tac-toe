@@ -1,6 +1,9 @@
+/* eslint-disable no-param-reassign */
+import produce from "immer";
 import toast from "react-hot-toast";
 import create from "zustand";
 import { Room } from "../server/router/tictactoe";
+import { CheckedBoxAnnouncement } from "../types";
 
 type State = {
   initialized: boolean;
@@ -10,6 +13,7 @@ type State = {
   onHostChanged: (newHost: string) => void;
   onServerNotifyRoomState: (room: Room) => void;
   gameStartsNow: (room: Room) => void;
+  playerCheckedBox: (announcement: CheckedBoxAnnouncement) => void;
 };
 
 export default create<State>((set) => ({
@@ -55,5 +59,14 @@ export default create<State>((set) => ({
   gameStartsNow: (room) => {
     set((state) => ({ ...state, room }));
     toast(`The game starts now`);
+  },
+  playerCheckedBox: (announcement) => {
+    set(
+      produce<State>((state) => {
+        state.room.data.board[announcement.box] = announcement.hostOrGuest;
+        state.room.data.turn =
+          announcement.hostOrGuest === "host" ? "guest" : "host";
+      })
+    );
   },
 }));

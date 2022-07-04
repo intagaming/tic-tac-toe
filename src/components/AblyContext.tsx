@@ -60,8 +60,13 @@ export const AblyContextProvider = ({ children }: { children: ReactNode }) => {
     );
   }, [tokenRequest]);
 
-  const { room, onHostChanged, onServerNotifyRoomState, gameStartsNow } =
-    useStore();
+  const {
+    room,
+    onHostChanged,
+    onServerNotifyRoomState,
+    gameStartsNow,
+    playerCheckedBox,
+  } = useStore();
   const controlChannel = useChannel(ably, `control:${room.id}`);
   useChannel(ably, `server:${room.id}`, (message) => {
     switch (message.name) {
@@ -73,6 +78,9 @@ export const AblyContextProvider = ({ children }: { children: ReactNode }) => {
         break;
       case "GAME_STARTS_NOW":
         gameStartsNow(JSON.parse(message.data));
+        break;
+      case "PLAYER_CHECKED_BOX":
+        playerCheckedBox(JSON.parse(message.data));
         break;
       default:
         // console.log(`Unknown message: ${message}`);
