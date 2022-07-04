@@ -120,7 +120,6 @@ const TicTacToe = () => {
                   type="button"
                   className="p-2 bg-indigo-600"
                   onClick={() => {
-                    // setLoading(true);
                     controlChannel?.publish("START_GAME", "");
                   }}
                 >
