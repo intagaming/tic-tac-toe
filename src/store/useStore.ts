@@ -22,7 +22,7 @@ export default create<State>((set) => ({
     guest: null,
     data: {
       ticks: 0,
-      board: [],
+      board: [null, null, null, null, null, null, null, null, null],
       turn: "host",
       turnEndsAt: -1,
     },

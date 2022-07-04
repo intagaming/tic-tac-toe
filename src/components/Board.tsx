@@ -11,7 +11,7 @@ const Board = () => {
     <div className="grid w-[30vw] grid-cols-3 border-2 border-black divide-x divide-y aspect-square">
       {indexes.map((i) => (
         // eslint-disable-next-line react/no-array-index-key
-        <Box key={i} state={room.data.board[i] ?? null} />
+        <Box key={i} boxIndex={i} state={room.data.board[i] ?? null} />
       ))}
     </div>
   );

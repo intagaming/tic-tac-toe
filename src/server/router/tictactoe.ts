@@ -13,7 +13,7 @@ export type Room = {
   guest: string | null;
   data: {
     ticks: number;
-    board: ("host" | "guest")[];
+    board: ("host" | "guest" | null)[];
     turn: "host" | "guest";
     turnEndsAt: number;
   };
@@ -26,7 +26,7 @@ const DEFAULT_ROOM: Room = {
   guest: null,
   data: {
     ticks: 0,
-    board: [],
+    board: [null, null, null, null, null, null, null, null, null],
     turn: "host",
     turnEndsAt: -1,
   },
