@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef } from "react";
 import toast from "react-hot-toast";
-import useChannel from "../hooks/useChannel";
 import useStore from "../store/useStore";
 import { trpc } from "../utils/trpc";
 import { useAbly } from "./AblyContext";
@@ -8,17 +7,9 @@ import Board from "./Board";
 import ProfilePane from "./ProfilePane";
 
 const TicTacToe = () => {
-  const {
-    room,
-    initialized,
-    clientId,
-    joinRoom,
-    onHostChanged,
-    onServerNotifyRoomState,
-    gameStartsNow,
-  } = useStore();
+  const { room, initialized, clientId, joinRoom } = useStore();
 
-  const { setTokenRequest } = useAbly();
+  const { setTokenRequest, controlChannel } = useAbly();
 
   const { mutate: newRoomMutation } = trpc.useMutation(["tictactoe.new-room"], {
     onSuccess: (data) => {
@@ -37,24 +28,6 @@ const TicTacToe = () => {
       setTokenRequest(data.tokenRequestData);
       joinRoom(data.clientId, data.roomId);
     },
-  });
-
-  const controlChannel = useChannel(`control:${room.id}`);
-  useChannel(`server:${room.id}`, (message) => {
-    switch (message.name) {
-      case "HOST_CHANGE":
-        onHostChanged(message.data);
-        break;
-      case "ROOM_STATE":
-        onServerNotifyRoomState(JSON.parse(message.data));
-        break;
-      case "GAME_STARTS_NOW":
-        gameStartsNow(JSON.parse(message.data));
-        break;
-      default:
-        // console.log(`Unknown message: ${message}`);
-        break;
-    }
   });
 
   // New room if we don't have one
@@ -83,15 +56,6 @@ const TicTacToe = () => {
     room.id,
     setTokenRequest,
   ]);
-
-  useEffect(() => {
-    if (!controlChannel) return () => {};
-
-    controlChannel.presence.enter();
-    return () => {
-      controlChannel.presence.leave();
-    };
-  }, [controlChannel]);
 
   const inputRef = useRef<HTMLInputElement | null>(null);
   const loading = useMemo(() => !initialized, [initialized]);

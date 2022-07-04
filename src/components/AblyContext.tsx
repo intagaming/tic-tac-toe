@@ -10,13 +10,40 @@ import {
   useState,
 } from "react";
 import Ably from "ably/promises";
+import useStore from "../store/useStore";
 
 type State = {
   ably: Types.RealtimePromise | undefined;
   setTokenRequest: Dispatch<SetStateAction<Types.TokenRequest | undefined>>;
+  controlChannel: Types.RealtimeChannelPromise | null;
 };
 
 const ablyContext = createContext<State | undefined>(undefined);
+
+function useChannel(
+  ably: State["ably"],
+  channelName: string,
+  callbackOnMessage?: (message: Types.Message) => void
+) {
+  const channel = useMemo(
+    () => ably?.channels.get(channelName),
+    [ably, channelName]
+  );
+
+  useEffect(() => {
+    channel?.subscribe((msg) => {
+      callbackOnMessage?.(msg);
+    });
+    return () => {
+      channel?.unsubscribe();
+    };
+  });
+
+  if (!ably) {
+    return null;
+  }
+  return channel ?? null;
+}
 
 export const AblyContextProvider = ({ children }: { children: ReactNode }) => {
   const [ably, setAbly] = useState<State["ably"]>();
@@ -33,7 +60,39 @@ export const AblyContextProvider = ({ children }: { children: ReactNode }) => {
     );
   }, [tokenRequest]);
 
-  const value = useMemo(() => ({ ably, setTokenRequest }), [ably]);
+  const { room, onHostChanged, onServerNotifyRoomState, gameStartsNow } =
+    useStore();
+  const controlChannel = useChannel(ably, `control:${room.id}`);
+  useChannel(ably, `server:${room.id}`, (message) => {
+    switch (message.name) {
+      case "HOST_CHANGE":
+        onHostChanged(message.data);
+        break;
+      case "ROOM_STATE":
+        onServerNotifyRoomState(JSON.parse(message.data));
+        break;
+      case "GAME_STARTS_NOW":
+        gameStartsNow(JSON.parse(message.data));
+        break;
+      default:
+        // console.log(`Unknown message: ${message}`);
+        break;
+    }
+  });
+
+  useEffect(() => {
+    if (!controlChannel) return () => {};
+
+    controlChannel.presence.enter();
+    return () => {
+      controlChannel.presence.leave();
+    };
+  }, [controlChannel]);
+
+  const value = useMemo(
+    () => ({ ably, setTokenRequest, controlChannel }),
+    [ably, controlChannel]
+  );
 
   return <ablyContext.Provider value={value}>{children}</ablyContext.Provider>;
 };
