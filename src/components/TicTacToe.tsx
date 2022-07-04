@@ -99,45 +99,7 @@ const TicTacToe = () => {
   return (
     <div className="flex flex-col w-full h-full bg-green-700">
       {loading && <p>Loading...</p>}
-      {!loading && room.state === "waiting" && (
-        <div>
-          <p>Room ID: {room.id}</p>
-          <p>Client ID: {clientId}</p>
-          <p>Host: {room.host}</p>
-          <p>Guest: {room.guest}</p>
-          <p>State: {room.state}</p>
-          <div className="flex">
-            <input type="text" ref={inputRef} className="text-black" />
-            <button
-              type="button"
-              onClick={() => {
-                if (!inputRef.current) return;
-                joinRoomMutate({ roomId: inputRef.current.value, clientId });
-              }}
-            >
-              Join Room
-            </button>
-          </div>
-          <button
-            type="button"
-            onClick={() => {
-              // setLoading(true);
-              controlChannel?.publish("START_GAME", "");
-            }}
-          >
-            Start Game
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              newRoomMutation({ clientId });
-            }}
-          >
-            New Room
-          </button>
-        </div>
-      )}
-      {!loading && room.state === "playing" && (
+      {!loading && (
         <div className="flex flex-col flex-1">
           {/* Top control bar */}
           <div className="flex items-center gap-4 bg-yellow-800">
@@ -151,6 +113,29 @@ const TicTacToe = () => {
               New Room
             </button>
             <p>Room ID: {room.id}</p>
+
+            <div className="flex">
+              <input type="text" ref={inputRef} className="text-black" />
+              <button
+                type="button"
+                onClick={() => {
+                  if (!inputRef.current) return;
+                  joinRoomMutate({ roomId: inputRef.current.value, clientId });
+                }}
+              >
+                Join Room
+              </button>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-center h-32 text-4xl text-center">
+            {room.state === "waiting" && room.guest === null && (
+              <p>Waiting for a guest...</p>
+            )}
+            {room.state === "waiting" && room.guest !== null && (
+              <p>Waiting for the host to start the game...</p>
+            )}
+            {room.state === "playing" && <p>Tic Tac Toe</p>}
           </div>
 
           <div className="flex flex-1 gap-4">
@@ -161,6 +146,23 @@ const TicTacToe = () => {
             </div>
 
             <ProfilePane name={room.guest} x={false} />
+          </div>
+
+          <div className="flex items-center justify-center h-32">
+            {clientId === room.host &&
+              room.state === "waiting" &&
+              room.guest !== null && (
+                <button
+                  type="button"
+                  className="p-2 bg-indigo-600"
+                  onClick={() => {
+                    // setLoading(true);
+                    controlChannel?.publish("START_GAME", "");
+                  }}
+                >
+                  Start Game
+                </button>
+              )}
           </div>
         </div>
       )}
