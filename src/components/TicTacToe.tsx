@@ -4,6 +4,8 @@ import useChannel from "../hooks/useChannel";
 import useStore from "../store/useStore";
 import { trpc } from "../utils/trpc";
 import { useAbly } from "./AblyContext";
+import Board from "./Board";
+import ProfilePane from "./ProfilePane";
 
 const TicTacToe = () => {
   const {
@@ -95,12 +97,12 @@ const TicTacToe = () => {
   const loading = useMemo(() => !initialized, [initialized]);
 
   return (
-    <div className="w-full h-full bg-green-700">
+    <div className="flex flex-col w-full h-full bg-green-700">
       {loading && <p>Loading...</p>}
-      {!loading && (
+      {!loading && room.state === "waiting" && (
         <div>
-          <p>Client ID: {clientId}</p>
           <p>Room ID: {room.id}</p>
+          <p>Client ID: {clientId}</p>
           <p>Host: {room.host}</p>
           <p>Guest: {room.guest}</p>
           <p>State: {room.state}</p>
@@ -133,6 +135,33 @@ const TicTacToe = () => {
           >
             New Room
           </button>
+        </div>
+      )}
+      {!loading && room.state === "playing" && (
+        <div className="flex flex-col flex-1">
+          {/* Top control bar */}
+          <div className="flex items-center gap-4 bg-yellow-800">
+            <button
+              type="button"
+              onClick={() => {
+                newRoomMutation({ clientId });
+              }}
+              className="p-2 bg-indigo-600"
+            >
+              New Room
+            </button>
+            <p>Room ID: {room.id}</p>
+          </div>
+
+          <div className="flex flex-1 gap-4">
+            <ProfilePane name={room.host} x />
+
+            <div className="flex items-center justify-center flex-1">
+              <Board />
+            </div>
+
+            <ProfilePane name={room.guest} x={false} />
+          </div>
         </div>
       )}
     </div>
