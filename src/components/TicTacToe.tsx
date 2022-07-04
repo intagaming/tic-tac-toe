@@ -44,10 +44,12 @@ const TicTacToe = () => {
 
   // New room if we don't have one
   useEffect(() => {
-    if (myRoom.isLoading || myRoom.data?.roomId || room.id) return;
+    if (myRoom.isLoading || myRoom.data?.roomId || room.id || joinRoomLoading)
+      return;
     newRoomMutation({ clientId });
   }, [
     clientId,
+    joinRoomLoading,
     myRoom.data?.roomId,
     myRoom.isLoading,
     newRoomMutation,
