@@ -17,8 +17,8 @@ const roomDefault: Room = {
     board: [null, null, null, null, null, null, null, null, null],
     turn: "host",
     turnEndsAt: -1,
-    gameEndsAt: -1,
-  },
+    gameEndsAt: -1
+  }
 };
 
 type State = {
@@ -39,6 +39,7 @@ type State = {
   playerCheckedBox: (announcement: CheckedBoxAnnouncement) => void;
   clientLeft: (clientId: string) => void;
   winnerAnnounced: (announcement: WinnerAnnouncement) => void;
+  gameEnded: (gameEndsAt: number) => void;
 };
 
 export default create<State>()(
@@ -98,11 +99,17 @@ export default create<State>()(
       });
       toast(`${clientId} left the game`);
     },
-  winnerAnnounced: (announcement) => {
+    winnerAnnounced: (announcement) => {
       set((state) => {
         state.room.data.gameEndsAt = announcement.gameEndsAt;
       });
       toast(`${announcement.winner} won!`);
+    },
+    gameEnded: (gameEndsAt) => {
+      set((state) => {
+        state.room.data.gameEndsAt = gameEndsAt;
+      });
+      toast(`The game ended`);
     }
   }))
 );
