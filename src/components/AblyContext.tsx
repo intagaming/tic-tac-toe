@@ -65,6 +65,7 @@ export const AblyContextProvider = ({ children }: { children: ReactNode }) => {
     gameStartsNow,
     playerCheckedBox,
     clientLeft,
+    winnerAnnounced,
   } = useStore();
   const controlChannel = useChannel(
     ably,
@@ -86,6 +87,9 @@ export const AblyContextProvider = ({ children }: { children: ReactNode }) => {
         break;
       case "CLIENT_LEFT":
         clientLeft(message.data);
+        break;
+      case "WINNER":
+        winnerAnnounced(JSON.parse(message.data));
         break;
       default:
         // console.log(`Unknown message: ${message}`);

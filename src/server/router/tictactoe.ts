@@ -16,6 +16,7 @@ export type Room = {
     board: ("host" | "guest" | null)[];
     turn: "host" | "guest";
     turnEndsAt: number;
+    gameEndsAt: number;
   };
 };
 
@@ -29,6 +30,7 @@ const DEFAULT_ROOM: Room = {
     board: [null, null, null, null, null, null, null, null, null],
     turn: "host",
     turnEndsAt: -1,
+    gameEndsAt: -1,
   },
 };
 
