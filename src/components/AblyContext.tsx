@@ -64,6 +64,7 @@ export const AblyContextProvider = ({ children }: { children: ReactNode }) => {
     onServerNotifyRoomState,
     gameStartsNow,
     playerCheckedBox,
+    clientLeft,
   } = useStore();
   const controlChannel = useChannel(
     ably,
@@ -82,6 +83,9 @@ export const AblyContextProvider = ({ children }: { children: ReactNode }) => {
         break;
       case "PLAYER_CHECKED_BOX":
         playerCheckedBox(JSON.parse(message.data));
+        break;
+      case "CLIENT_LEFT":
+        clientLeft(message.data);
         break;
       default:
         // console.log(`Unknown message: ${message}`);

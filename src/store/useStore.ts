@@ -36,6 +36,7 @@ type State = {
   onServerNotifyRoomState: (room: Room) => void;
   gameStartsNow: (room: Room) => void;
   playerCheckedBox: (announcement: CheckedBoxAnnouncement) => void;
+  clientLeft: (clientId: string) => void;
 };
 
 export default create<State>()(
@@ -85,5 +86,15 @@ export default create<State>()(
           announcement.hostOrGuest === "host" ? "guest" : "host";
       });
     },
+    clientLeft: (clientId) => {
+      set((state) => {
+        if (state.room.guest === clientId) {
+          state.room.guest = null;
+        } else if (state.room.host === clientId) {
+          state.room.host = null;
+        }
+      });
+      toast(`${clientId} left the game`);
+    }
   }))
 );
