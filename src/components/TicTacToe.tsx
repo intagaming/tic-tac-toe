@@ -63,27 +63,35 @@ const TicTacToe = () => {
   );
 
   return (
-    <div className="flex flex-col w-full h-full bg-green-700">
+    <div className="w-full h-full bg-green-700">
       {loading && <p>Loading...</p>}
       {!loading && (
-        <div className="flex flex-col flex-1">
+        <div className="h-full flex flex-col flex-1">
           {/* Top control bar */}
-          <div className="flex items-center gap-4 bg-yellow-800">
-            <button
-              type="button"
-              onClick={() => {
-                newRoomMutation({ clientId });
-              }}
-              className="p-2 bg-indigo-600"
-            >
-              New Room
-            </button>
-            <p>Room ID: {room.id}</p>
-
-            <div className="flex">
-              <input type="text" ref={inputRef} className="text-black" />
+          <div className="flex flex-col sm:flex-row sm:gap-6 bg-yellow-800">
+            <div className="flex items-center">
               <button
                 type="button"
+                onClick={() => {
+                  newRoomMutation({ clientId });
+                }}
+                className="p-2 bg-indigo-600"
+              >
+                New Room
+              </button>
+              <p>Room ID: {room.id}</p>
+            </div>
+
+            <div className="flex">
+              <input
+                type="text"
+                ref={inputRef}
+                className="text-black"
+                placeholder="Enter Room ID"
+              />
+              <button
+                type="button"
+                className="p-2 bg-pink-700"
                 onClick={() => {
                   if (!inputRef.current) return;
                   joinRoomMutate({ roomId: inputRef.current.value, clientId });
@@ -94,7 +102,7 @@ const TicTacToe = () => {
             </div>
           </div>
 
-          <div className="flex items-center justify-center h-32 text-4xl text-center">
+          <div className="flex items-center justify-center text-xl py-4 text-center">
             {room.state === "waiting" && room.guest === null && (
               <p>Waiting for a guest...</p>
             )}
@@ -102,32 +110,36 @@ const TicTacToe = () => {
               <p>Waiting for the host to start the game...</p>
             )}
             {room.state === "playing" && <p>Tic Tac Toe</p>}
+            {room.state === "finishing" && <p>Game ended</p>}
           </div>
 
-          <div className="flex flex-1 gap-4">
+          <div className="flex flex-col lg:flex-row flex-1 gap-4 py-4">
             <ProfilePane name={room.host} x />
 
-            <div className="flex items-center justify-center flex-1">
-              <Board />
+            <div className="flex items-center justify-center flex-1 relative">
+              <div
+                className={`w-full md:w-[80vw] lg:w-[40vw] xl:w-[30vw] ${room.state === "waiting" && "blur-sm"}`}
+              >
+                <Board />
+              </div>
+              {clientId === room.host && room.state === "waiting" && (
+                <div className="absolute inset-0 flex justify-center items-center">
+                  {room.guest !== null && (
+                    <button
+                      type="button"
+                      className="py-3 px-6 text-xl bg-indigo-600 rounded-md"
+                      onClick={() => {
+                        controlChannel?.publish("START_GAME", "");
+                      }}
+                    >
+                      Start Game
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
 
             <ProfilePane name={room.guest} x={false} />
-          </div>
-
-          <div className="flex items-center justify-center h-32">
-            {clientId === room.host &&
-              room.state === "waiting" &&
-              room.guest !== null && (
-                <button
-                  type="button"
-                  className="p-2 bg-indigo-600"
-                  onClick={() => {
-                    controlChannel?.publish("START_GAME", "");
-                  }}
-                >
-                  Start Game
-                </button>
-              )}
           </div>
         </div>
       )}
