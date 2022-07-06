@@ -26,7 +26,7 @@ const Box = ({ boxIndex, state }: Props) => {
     <button
       type="button"
       className="flex items-center justify-center text-[5vw] bg-red-300 hover:bg-red-200 aspect-square"
-      disabled={state !== null || !isTurn}
+      disabled={state !== null || !isTurn || room.state !== "playing"}
       onClick={handleClick}
     >
       {state === "host" && <span>❌</span>}
