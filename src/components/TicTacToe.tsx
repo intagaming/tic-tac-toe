@@ -62,6 +62,13 @@ const TicTacToe = () => {
     [initialized, joinRoomLoading, newRoomLoading]
   );
 
+  const isYourTurn = useMemo(
+    () =>
+      (room.data.turn === "host" && room.host === clientId) ||
+      (room.data.turn === "guest" && room.guest === clientId),
+    [clientId, room.data.turn, room.guest, room.host]
+  );
+
   return (
     <div className="w-full h-full bg-green-700">
       {loading && <p>Loading...</p>}
@@ -102,23 +109,28 @@ const TicTacToe = () => {
             </div>
           </div>
 
-          <div className="flex items-center justify-center text-xl py-4 text-center">
+          <div className="flex items-center justify-center text-xl md:text-4xl py-4 text-center">
             {room.state === "waiting" && room.guest === null && (
               <p>Waiting for a guest...</p>
             )}
             {room.state === "waiting" && room.guest !== null && (
               <p>Waiting for the host to start the game...</p>
             )}
-            {room.state === "playing" && <p>Tic Tac Toe</p>}
+            {room.state === "playing" && isYourTurn && <p>Your turn!</p>}
+            {room.state === "playing" && !isYourTurn && (
+              <p>Watching their move...</p>
+            )}
             {room.state === "finishing" && <p>Game ended</p>}
           </div>
 
           <div className="flex flex-col lg:flex-row flex-1 gap-4 py-4">
-            <ProfilePane name={room.host} x />
+            <ProfilePane clientId={room.host} x />
 
             <div className="flex items-center justify-center flex-1 relative">
               <div
-                className={`w-full md:w-[80vw] lg:w-[40vw] xl:w-[30vw] ${room.state === "waiting" && "blur-sm"}`}
+                className={`w-full md:w-[80vw] lg:w-[40vw] xl:w-[30vw] ${
+                  room.state === "waiting" && "blur-sm"
+                }`}
               >
                 <Board />
               </div>
@@ -139,7 +151,7 @@ const TicTacToe = () => {
               )}
             </div>
 
-            <ProfilePane name={room.guest} x={false} />
+            <ProfilePane clientId={room.guest} x={false} />
           </div>
         </div>
       )}
