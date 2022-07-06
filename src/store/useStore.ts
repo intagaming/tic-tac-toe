@@ -115,6 +115,7 @@ export default create<State>()(
     },
     gameFinishing: (gameEndsAt) => {
       set((state) => {
+        state.room.state = "finishing";
         state.room.data.gameEndsAt = gameEndsAt;
       });
       toast(`The game ended`);
