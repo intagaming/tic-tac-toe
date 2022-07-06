@@ -3,7 +3,7 @@ export type CheckedBoxAnnouncement = {
   box: number;
 };
 
-export type WinnerAnnouncement = {
-  winner: "host" | "guest";
+export type GameResultAnnouncement = {
+  winner: string | null;
   gameEndsAt: number;
 };

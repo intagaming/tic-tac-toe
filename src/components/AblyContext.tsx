@@ -65,7 +65,7 @@ export const AblyContextProvider = ({ children }: { children: ReactNode }) => {
     gameStartsNow,
     playerCheckedBox,
     clientLeft,
-    winnerAnnounced,
+    gameResultAnnounced,
     gameFinishing,
     gameFinished,
   } = useStore();
@@ -90,8 +90,8 @@ export const AblyContextProvider = ({ children }: { children: ReactNode }) => {
       case "CLIENT_LEFT":
         clientLeft(message.data);
         break;
-      case "WINNER":
-        winnerAnnounced(JSON.parse(message.data));
+      case "GAME_RESULT":
+        gameResultAnnounced(JSON.parse(message.data));
         break;
       case "GAME_FINISHING":
         gameFinishing(parseInt(message.data, 10));
