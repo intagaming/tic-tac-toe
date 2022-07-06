@@ -39,7 +39,8 @@ type State = {
   playerCheckedBox: (announcement: CheckedBoxAnnouncement) => void;
   clientLeft: (clientId: string) => void;
   winnerAnnounced: (announcement: WinnerAnnouncement) => void;
-  gameEnded: (gameEndsAt: number) => void;
+  gameFinishing: (gameEndsAt: number) => void;
+  gameFinished: () => void;
 };
 
 export default create<State>()(
@@ -67,6 +68,9 @@ export default create<State>()(
     onHostChanged: (newHost) => {
       set((state) => {
         state.room.host = newHost;
+        if (state.room.guest === newHost) {
+          state.room.guest = null;
+        }
       });
       toast(`The host is now ${newHost}`);
     },
@@ -105,11 +109,17 @@ export default create<State>()(
       });
       toast(`${announcement.winner} won!`);
     },
-    gameEnded: (gameEndsAt) => {
+    gameFinishing: (gameEndsAt) => {
       set((state) => {
         state.room.data.gameEndsAt = gameEndsAt;
       });
       toast(`The game ended`);
+    },
+    gameFinished: () => {
+      set((state) => {
+        state.room.state = "waiting";
+        state.room.data = _.cloneDeep(roomDefault.data);
+      });
     }
   }))
 );
