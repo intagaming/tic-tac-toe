@@ -107,7 +107,7 @@ export default createRouter()
         capability: makeCapability(newRoomId),
       });
 
-      await redis.set(`client:${clientId}`, newRoomId);
+      await redis.set(`client:${clientId}`, newRoomId, "EX", 60);
 
       return {
         clientId,
