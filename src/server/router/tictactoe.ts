@@ -88,19 +88,10 @@ export default createRouter()
       while (retries <= MAX_RETRIES) {
         newRoomId = crypto.randomBytes(3).toString("hex");
         // eslint-disable-next-line no-await-in-loop
-        const json = await redis.call(
-          "JSON.SET",
-          `room:${newRoomId}`,
-          "$",
-          JSON.stringify({ ...DEFAULT_ROOM, id: newRoomId }),
-          "NX"
-        );
+        const json = await redis.set(`room:${newRoomId}`, JSON.stringify({ ...DEFAULT_ROOM, id: newRoomId }), "EX", 60, "NX");
         if (json !== null) {
-          // eslint-disable-next-line no-await-in-loop
-          redis.expire(`room:${newRoomId}`, 60); // The host has 60 seconds to join the room
           break;
         }
-
         retries += 1;
       }
       if (retries > MAX_RETRIES || newRoomId === undefined) {
@@ -154,8 +145,8 @@ export default createRouter()
         }
       }
 
-      const json = await redis.call("JSON.GET", `room:${roomId}`, "$");
-      if (json === null) {
+      const exists = await redis.exists(`room:${roomId}`);
+      if (exists === 0) {
         throw new TRPCError({
           code: "NOT_FOUND",
           message: `Room ${roomId} does not exist.`,
