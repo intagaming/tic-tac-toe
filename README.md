@@ -9,5 +9,5 @@ This project uses [create-t3-app][4].
 
 [1]: https://www.hxann.com/blog/posts/distributed-realtime-server
 [2]: https://github.com/intagaming/tic-tac-toe-worker
-[3]: https://res.cloudinary.com/an7/image/upload/v1657248180/blog/distributed-realtime-architecture-overview_e9mm3e.png
+[3]: https://res.cloudinary.com/an7/image/upload/v1657248180/blog/distributed-realtime-architecture-extended_f3olml.png
 [4]: https://create.t3.gg/
