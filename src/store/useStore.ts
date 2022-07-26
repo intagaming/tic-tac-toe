@@ -41,6 +41,8 @@ type State = {
   gameResultAnnounced: (announcement: GameResultAnnouncement) => void;
   gameFinishing: (gameEndsAt: number) => void;
   gameFinished: () => void;
+  clientDisconnected: (clientId: string) => void;
+  clientReconnected: (clientId: string) => void;
 };
 
 export default create<State>()(
@@ -125,6 +127,28 @@ export default create<State>()(
         state.room.state = "waiting";
         state.room.data = _.cloneDeep(roomDefault.data);
       });
+    },
+    clientDisconnected: (clientId) => {
+      set((state) => {
+        if (state.room.guest?.name === clientId) {
+          state.room.guest.connected = false;
+        } else if (state.room.host?.name === clientId) {
+          state.room.host.connected = false;
+        }
+      });
+      toast(`${clientId} disconnected. Please wait for them to reconnect.`);
+    },
+    clientReconnected: (clientId) => {
+      // If our client reconnects, we still need to update our connected status
+      // because the state that the server sends us might be stale.
+      set((state) => {
+        if (state.room.guest?.name === clientId) {
+          state.room.guest.connected = true;
+        } else if (state.room.host?.name === clientId) {
+          state.room.host.connected = true;
+        }
+      });
+      toast(`${clientId} reconnected.`);
     },
   }))
 );
