@@ -1,5 +1,6 @@
 import { TRPCError } from "@trpc/server";
 import { Types } from "ably/promises";
+import { DateTime } from "luxon";
 import crypto from "node:crypto";
 import { z } from "zod";
 import { createRouter } from "./context";
@@ -88,7 +89,13 @@ export default createRouter()
       while (retries <= MAX_RETRIES) {
         newRoomId = crypto.randomBytes(3).toString("hex");
         // eslint-disable-next-line no-await-in-loop
-        const json = await redis.set(`room:${newRoomId}`, JSON.stringify({ ...DEFAULT_ROOM, id: newRoomId }), "EX", 60, "NX");
+        const json = await redis.set(
+          `room:${newRoomId}`,
+          JSON.stringify({ ...DEFAULT_ROOM, id: newRoomId }),
+          "EX",
+          60,
+          "NX"
+        );
         if (json !== null) {
           break;
         }
@@ -100,6 +107,26 @@ export default createRouter()
           message: "Unable to create a room id. Try again later.",
         });
       }
+
+      /**
+       * Add the room to the ticker sorted set.
+       *
+       * We need the precision of microseconds. Consider the case of a 64tick
+       * game like CSGO. In 1 second, there are 64 ticks. So each tick takes
+       * 1/64th of a second, which is 0.015625 seconds, which is 15625
+       * microseconds. We need it to be an integer, so that's the best we can
+       * do, e.g. milliseconds would make it 15.625 ms, which is not an integer.
+       *
+       * But in JavaScript, the best we could get is Unix in milliseconds. So,
+       * we will convert millis to micros, half a second delay to the first
+       * tick, and hope that half a second is not very noticeable.
+       */
+      const millis = DateTime.now().toMillis();
+      const micros = millis * 1000;
+      // We delay half a second from the first tick to compensate for network
+      // latency.
+      const microsToCommit = micros + 0.5 * 1e6;
+      await redis.zadd("tickingRooms", microsToCommit, newRoomId);
 
       // Generate the Ably API key to communicate within the room
       const tokenRequestData = await ablyClient.auth.createTokenRequest({
