@@ -17,11 +17,16 @@ const ProfilePane = ({ clientId, x }: Props) => {
         (room.data.turn === "guest" && room.guest?.name === clientId)),
     [clientId, room.data.turn, room.guest, room.host]
   );
+  const grayOut = () =>
+    (room.state === "playing" && !isTurn) ||
+    (clientId !== null &&
+      ((clientId === room.host?.name && room.host.connected === false) ||
+        (clientId === room.guest?.name && room.guest.connected === false)));
 
   return (
     <div
       className={`flex items-center justify-center gap-4 px-4 ${
-        room.state === "playing" && !isTurn ? "brightness-50" : ""
+        grayOut() ? "brightness-50" : ""
       }`}
     >
       <span className="w-10 bg-white rounded-full aspect-square" />
