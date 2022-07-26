@@ -96,7 +96,14 @@ export default createRouter()
         // eslint-disable-next-line no-await-in-loop
         const json = await redis.set(
           `room:${newRoomId}`,
-          JSON.stringify({ ...DEFAULT_ROOM, id: newRoomId }),
+          JSON.stringify({
+            ...DEFAULT_ROOM,
+            id: newRoomId,
+            host: {
+              name: clientId,
+              connected: false,
+            },
+          } as Room),
           "EX",
           60,
           "NX"
