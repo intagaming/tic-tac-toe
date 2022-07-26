@@ -4,7 +4,7 @@ import _ from "lodash-es";
 import toast from "react-hot-toast";
 import create from "zustand";
 import { immer } from "zustand/middleware/immer";
-import { Player, Room } from "../server/router/tictactoe";
+import { Room } from "../server/router/tictactoe";
 import { CheckedBoxAnnouncement, GameResultAnnouncement } from "../types";
 
 const roomDefault: Room = {
@@ -33,7 +33,7 @@ type State = {
     clientId: string,
     roomId: string
   ) => void;
-  onHostChanged: (newHost: Player) => void;
+  onHostChanged: (newHost: string) => void;
   onServerNotifyRoomState: (room: Room) => void;
   gameStartsNow: (room: Room) => void;
   playerCheckedBox: (announcement: CheckedBoxAnnouncement) => void;
@@ -69,10 +69,11 @@ export default create<State>()(
     },
     onHostChanged: (newHost) => {
       set((state) => {
-        state.room.host = newHost;
-        if (state.room.guest === newHost) {
+        if (state.room.guest?.name === newHost) {
+          state.room.host = state.room.guest;
           state.room.guest = null;
         }
+        // Haven't found any other case yet.
       });
       toast(`The host is now ${newHost}`);
     },
