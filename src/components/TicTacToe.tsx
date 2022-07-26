@@ -71,8 +71,9 @@ const TicTacToe = () => {
 
   const isYourTurn = useMemo(
     () =>
-      (room.data.turn === "host" && room.host === clientId) ||
-      (room.data.turn === "guest" && room.guest === clientId),
+      clientId !== null &&
+      ((room.data.turn === "host" && room.host?.name === clientId) ||
+        (room.data.turn === "guest" && room.guest?.name === clientId)),
     [clientId, room.data.turn, room.guest, room.host]
   );
 
@@ -80,9 +81,9 @@ const TicTacToe = () => {
     <div className="w-full h-full bg-green-700">
       {loading && <p>Loading...</p>}
       {!loading && (
-        <div className="h-full flex flex-col flex-1">
+        <div className="flex flex-col flex-1 h-full">
           {/* Top control bar */}
-          <div className="flex flex-col sm:flex-row sm:gap-6 bg-yellow-800">
+          <div className="flex flex-col bg-yellow-800 sm:flex-row sm:gap-6">
             <div className="flex items-center">
               <button
                 type="button"
@@ -116,7 +117,7 @@ const TicTacToe = () => {
             </div>
           </div>
 
-          <div className="flex items-center justify-center text-xl md:text-4xl py-4 text-center">
+          <div className="flex items-center justify-center py-4 text-xl text-center md:text-4xl">
             {room.state === "waiting" && room.guest === null && (
               <p>Waiting for a guest...</p>
             )}
@@ -130,10 +131,10 @@ const TicTacToe = () => {
             {room.state === "finishing" && <p>Game ended</p>}
           </div>
 
-          <div className="flex flex-col lg:flex-row flex-1 gap-4 py-4">
-            <ProfilePane clientId={room.host} x />
+          <div className="flex flex-col flex-1 gap-4 py-4 lg:flex-row">
+            <ProfilePane clientId={room.host?.name ?? null} x />
 
-            <div className="flex items-center justify-center flex-1 relative">
+            <div className="relative flex items-center justify-center flex-1">
               <div
                 className={`w-full md:w-[80vw] lg:w-[40vw] xl:w-[30vw] ${
                   room.state === "waiting" && "blur-sm"
@@ -141,24 +142,26 @@ const TicTacToe = () => {
               >
                 <Board />
               </div>
-              {clientId === room.host && room.state === "waiting" && (
-                <div className="absolute inset-0 flex justify-center items-center">
-                  {room.guest !== null && (
-                    <button
-                      type="button"
-                      className="py-3 px-6 text-xl bg-indigo-600 rounded-md"
-                      onClick={() => {
-                        controlChannel?.publish("START_GAME", "");
-                      }}
-                    >
-                      Start Game
-                    </button>
-                  )}
-                </div>
-              )}
+              {clientId !== null &&
+                clientId === room.host?.name &&
+                room.state === "waiting" && (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    {room.guest !== null && (
+                      <button
+                        type="button"
+                        className="px-6 py-3 text-xl bg-indigo-600 rounded-md"
+                        onClick={() => {
+                          controlChannel?.publish("START_GAME", "");
+                        }}
+                      >
+                        Start Game
+                      </button>
+                    )}
+                  </div>
+                )}
             </div>
 
-            <ProfilePane clientId={room.guest} x={false} />
+            <ProfilePane clientId={room.guest?.name ?? null} x={false} />
           </div>
         </div>
       )}

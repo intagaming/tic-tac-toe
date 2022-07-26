@@ -13,10 +13,10 @@ const Box = ({ boxIndex, state }: Props) => {
   const { clientId, room } = useStore();
   const isTurn = useMemo(
     () =>
-      (room.state === "playing" &&
-        clientId === room.host &&
-        room.data.turn === "host") ||
-      (clientId === room.guest && room.data.turn === "guest"),
+      clientId !== null &&
+      room.state === "playing" &&
+      ((clientId === room.host?.name && room.data.turn === "host") ||
+        (clientId === room.guest?.name && room.data.turn === "guest")),
     [clientId, room.data.turn, room.guest, room.host, room.state]
   );
 
@@ -33,12 +33,12 @@ const Box = ({ boxIndex, state }: Props) => {
     >
       {state === "host" && (
         <span>
-          <ImCross className="absolute top-0 left-0 w-full h-full scale-75 text-red-500" />
+          <ImCross className="absolute top-0 left-0 w-full h-full text-red-500 scale-75" />
         </span>
       )}
       {state === "guest" && (
         <span>
-          <FaRegCircle className="absolute top-0 left-0 w-full h-full scale-75 text-indigo-500" />
+          <FaRegCircle className="absolute top-0 left-0 w-full h-full text-indigo-500 scale-75" />
         </span>
       )}
       {state === null && <span />}

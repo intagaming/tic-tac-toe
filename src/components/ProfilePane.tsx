@@ -12,8 +12,9 @@ const ProfilePane = ({ clientId, x }: Props) => {
   const room = useStore((s) => s.room);
   const isTurn = useMemo(
     () =>
-      (room.data.turn === "host" && room.host === clientId) ||
-      (room.data.turn === "guest" && room.guest === clientId),
+      clientId !== null &&
+      ((room.data.turn === "host" && room.host?.name === clientId) ||
+        (room.data.turn === "guest" && room.guest?.name === clientId)),
     [clientId, room.data.turn, room.guest, room.host]
   );
 

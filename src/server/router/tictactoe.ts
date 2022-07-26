@@ -7,11 +7,16 @@ import { createRouter } from "./context";
 
 const MAX_RETRIES = 5;
 
+export type Player = {
+  name: string;
+  connected: boolean;
+};
+
 export type Room = {
   id: string | null;
-  host: string | null;
+  host: Player | null;
   state: "waiting" | "playing" | "finishing";
-  guest: string | null;
+  guest: Player | null;
   data: {
     ticks: number;
     board: ("host" | "guest" | null)[];

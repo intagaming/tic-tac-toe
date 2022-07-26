@@ -4,7 +4,7 @@ import _ from "lodash-es";
 import toast from "react-hot-toast";
 import create from "zustand";
 import { immer } from "zustand/middleware/immer";
-import { Room } from "../server/router/tictactoe";
+import { Player, Room } from "../server/router/tictactoe";
 import { CheckedBoxAnnouncement, GameResultAnnouncement } from "../types";
 
 const roomDefault: Room = {
@@ -17,8 +17,8 @@ const roomDefault: Room = {
     board: [null, null, null, null, null, null, null, null, null],
     turn: "host",
     turnEndsAt: -1,
-    gameEndsAt: -1
-  }
+    gameEndsAt: -1,
+  },
 };
 
 type State = {
@@ -33,7 +33,7 @@ type State = {
     clientId: string,
     roomId: string
   ) => void;
-  onHostChanged: (newHost: string) => void;
+  onHostChanged: (newHost: Player) => void;
   onServerNotifyRoomState: (room: Room) => void;
   gameStartsNow: (room: Room) => void;
   playerCheckedBox: (announcement: CheckedBoxAnnouncement) => void;
@@ -95,9 +95,9 @@ export default create<State>()(
     },
     clientLeft: (clientId) => {
       set((state) => {
-        if (state.room.guest === clientId) {
+        if (state.room.guest?.name === clientId) {
           state.room.guest = null;
-        } else if (state.room.host === clientId) {
+        } else if (state.room.host?.name === clientId) {
           state.room.host = null;
         }
       });
@@ -125,6 +125,6 @@ export default create<State>()(
         state.room.state = "waiting";
         state.room.data = _.cloneDeep(roomDefault.data);
       });
-    }
+    },
   }))
 );
