@@ -5,7 +5,6 @@ import toast from "react-hot-toast";
 import create from "zustand";
 import { immer } from "zustand/middleware/immer";
 import { Room } from "../server/router/tictactoe";
-import { CheckedBoxAnnouncement, GameResultAnnouncement } from "../types";
 
 const roomDefault: Room = {
   id: null,
@@ -36,9 +35,15 @@ type State = {
   onHostChanged: (newHost: string) => void;
   onServerNotifyRoomState: (room: Room) => void;
   gameStartsNow: (room: Room) => void;
-  playerCheckedBox: (announcement: CheckedBoxAnnouncement) => void;
+  playerCheckedBox: (announcement: {
+    hostOrGuest: "host" | "guest";
+    box: number;
+  }) => void;
   clientLeft: (clientId: string) => void;
-  gameResultAnnounced: (announcement: GameResultAnnouncement) => void;
+  gameResultAnnounced: (announcement: {
+    winner: string | null;
+    gameEndsAt: number;
+  }) => void;
   gameFinishing: (gameEndsAt: number) => void;
   gameFinished: () => void;
   clientDisconnected: (clientId: string) => void;
