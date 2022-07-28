@@ -51,7 +51,7 @@ type State = {
 };
 
 export default create<State>()(
-  immer<State>((set) => ({
+  immer<State>((set, get) => ({
     initialized: false,
     tokenRequest: null,
     clientId: null,
@@ -154,7 +154,9 @@ export default create<State>()(
           state.room.host.connected = true;
         }
       });
-      toast(`${clientId} reconnected.`);
+      if (clientId !== get().clientId) {
+        toast(`${clientId} reconnected.`);
+      }
     },
   }))
 );
