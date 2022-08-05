@@ -1,0 +1,12 @@
+name: Keep PlanetScale alive cron job
+on:
+  schedule:
+    - cron: "0 12 * * *" # daily https://crontab.guru/#0_12_*_*_*
+jobs:
+  cron:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call endpoint to keep the PlanetScale db alive
+        run: |
+          curl --request PUT \
+            --url '${{ secrets.SITE_URL }}/api/wakey'
