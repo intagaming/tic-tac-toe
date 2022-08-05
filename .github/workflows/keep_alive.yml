@@ -9,4 +9,5 @@ jobs:
       - name: Call endpoint to keep the PlanetScale db alive
         run: |
           curl --request PUT \
-            --url '${{ secrets.SITE_URL }}/api/wakey'
+            --url '${{ secrets.SITE_URL }}/api/wakey' \
+            --header 'x-keep-alive-api-secret: ${{ secrets.KEEP_ALIVE_API_SECRET }}'
