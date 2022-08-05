@@ -12,6 +12,11 @@ datasource db {
   referentialIntegrity = "prisma"
 }
 
+model PlanetscaleWakeyWakey {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+}
+
 // Neccessary for Next auth
 model Account {
   id                String  @id @default(cuid())
